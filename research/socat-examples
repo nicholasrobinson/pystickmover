@@ -1,0 +1,30 @@
+# Create two virtual serial ports, slave the first to the second, debug hex output
+socat -d -d -v -x pty,link=/tmp/serial,wait-slave,raw,echo=0 pty,link=/tmp/serial2,raw,echo=0
+# Connect to virtual serial ports
+screen /tmp/serial 9600
+# Observe traffic when typing
+
+# Optional: Create a virtual serial port that forwards data to an existing serial port
+socat pty,link=/tmp/serial3,wait-slave,raw,echo=0 /tmp/serial,raw,echo=0
+
+Misc commands
+=============
+
+brew install socat
+
+socat /dev/tty.usbserial-DN2VI335,raw,echo=0 SYSTEM:'tee in.txt | socat - "PTY,link=/tmp/ttyV0,raw,echo=0,waitslave" | tee out.txt'
+
+socat /dev/ttys004,raw,echo=0 SYSTEM:'tee in.txt | socat - "PTY,link=/tmp/ttyV0,raw,echo=0,waitslave" | tee out.txt'
+
+socat -x /dev/tty.usbserial-DN2VI335,raw,echo=0,crnl PTY,link=/dev/ttyV1,raw,echo=0,crnl
+
+socat -v /dev/ttys006,raw,echo=0  PTY,link=/tmp/myserial,raw,echo=0 2>logfile &
+minicom -p $(readlink $HOME/myserial)
+
+socat /dev/ttys004,raw,echo=0 SYSTEM:'tee in.txt | socat - "PTY,link=/tmp/ttyV0,raw,echo=0,waitslave" | tee out.txt'
+
+socat -d -d pty,raw,echo=0 pty,raw,echo=0
+
+socat -v /dev/ttys006,raw,echo=0 SYSTEM:'tee in.txt
+
+socat /dev/ttys006,raw,echo=0 SYSTEM:'tee in.txt | socat - "PTY,link=/tmp/ttyV0,raw,echo=0,waitslave" | tee out.txt'

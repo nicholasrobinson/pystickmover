@@ -1,0 +1,34 @@
+dtruss -p <PID>
+
+open("/dev/cu.usbserial-DN2VI335\0", 0x20026, 0x102)		 = 39 0
+# int open(const char *pathname, int flags, mode_t mode);
+# /dev/cu.usbserial-DN2VI335\0
+# 
+fcntl(0x27, 0x4, 0x0)		 = 0 0
+# int fcntl(int fd, int cmd, ... /* arg */ );
+ioctl(0x27, 0x40487413, 0x60000290C9A8)		 = 0 0
+ioctl(0x27, 0x40487413, 0x7FFEE1948948)		 = 0 0
+ioctl(0x27, 0x80487414, 0x7FFEE1948948)		 = 0 0
+ioctl(0x27, 0x4004746A, 0x7FFEE194899C)		 = 0 0
+ioctl(0x27, 0x8004746D, 0x7FFEE194899C)		 = 0 0
+# 
+...
+#
+write(0x19, "\002\005\334\005\334\005\334\005\334\0", 0xE)		 = 14 0
+write(0x19, "\341\020\004\0", 0xE)		 = 14 0
+
+write(0x19, "\002\a\306\005\334\005\334\005\334\0", 0xE)		 = 14 0
+write(0x19, "\340\0", 0xE)		 = 14 0
+write(0x19, "\002\005\334\005\334\005\334\005\334\0", 0xE)		 = 14 0
+
+# Example
+# echo -en '\x12\x02' > /dev/ttyS0
+echo -en "\002\005\334\005\334\005\334\005\334\0" > /dev/cu.usbserial-DN2VI335
+echo -en "\341\020\004\0" > /dev/cu.usbserial-DN2VI335
+echo -en "\002\a\306\005\334\005\334\005\334\0" > /dev/cu.usbserial-DN2VI335
+echo -en "\340\0" > /dev/cu.usbserial-DN2VI335
+echo -en "\002\005\334\005\334\005\334\005\334\0" > /dev/cu.usbserial-DN2VI335
+
+
+echo -en "\002\005\334\005\334\005\334\005\334\0\341\020\004\0\002\a\306\005\334\005\334\005\334\0\340\0" > /dev/cu.usbserial-DN2VI335
+
