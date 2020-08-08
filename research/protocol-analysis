@@ -1,0 +1,12 @@
+Protocol Analysis
+=================
+
+Example payload:
+02  05  dc  05  dc  05  dc  05  dc  00  00  00  00  86
+(m)| axis1 | axis2 | axis3 | axis4 | unkown       |(check)
+
+(check) appears to be: CheckSum8 Modulo 256
+(m) appears to be a start byte, which may be a mode?
+
+References:
+https://www.scadacore.com/tools/programming-calculators/online-checksum-calculator/
