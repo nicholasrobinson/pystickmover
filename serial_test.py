@@ -1,5 +1,6 @@
 import serial
 import time
+import random
 
 # Constants
 ENDIAN = 'big'
@@ -33,19 +34,25 @@ def generate_payload(axis1=0.5, axis2=0.5, axis3=0.5, axis4=0.5):
     return partial_payload + check_bytes
 
 # Write data
-ser = serial.Serial('/dev/cu.usbserial-DN2VI335', baudrate=57600, timeout=0.1)
-axis1 = 0.0
-axis2 = 0.0
-axis3 = 0.0
-axis4 = 0.0
-for i in range(100):
+ser = serial.Serial('/dev/cu.usbserial-DN2VI335', baudrate=57600, timeout=0.3)
+axis1 = 0.5
+axis2 = 0.5
+axis3 = 0.5
+axis4 = 0.5
+for i in range(10):
     data = generate_payload(axis1, axis2, axis3, axis4)
     print('writing', axis1, data)
     ser.write(data)
     print('reading', ser.read(RX_BYTE_LENGTH))
-    axis1 += 0.01
-    axis2 += 0.01
-    axis3 += 0.01
-    axis4 += 0.01
+    if axis1 > 0.5:
+        axis1 = 0.0
+    else:
+        axis1 = 1.0
+    # axis1 = random.uniform(0.0, 1.0)
+    # axis2 = random.uniform(0.0, 1.0)
+    # axis3 = random.uniform(0.0, 1.0)
+    # axis4 = random.uniform(0.0, 1.0)
+ser.write(generate_payload())
+print('reading', ser.read(RX_BYTE_LENGTH))
 
 ser.close()
