@@ -17,11 +17,32 @@ This driver allows a control the StickMover training device developed by AVIrem.
     
 ## Usage
 
-### Execution
+### Simple Example
+
+    $ python
+    >>> # Import the library
+    >>> import pystickmover
+    >>> # Connect to the StickMover device via USB serial
+    >>> stickmover = pystickmover.StickMover(serial_port='/dev/ttyUSB0')
+    >>> # Set all axis exponential to +50%
+    >>> stickmover.axis1_exp = 0.5
+    >>> stickmover.axis2_exp = 0.5
+    >>> stickmover.axis3_exp = 0.5
+    >>> stickmover.axis4_exp = 0.5
+    >>> # Set axis 1 to top position
+    >>> stickmover.axis1 = 1.0
+    >>> # Set all other axes to center position
+    >>> stickmover.axis2 = 0.5
+    >>> stickmover.axis3 = 0.5
+    >>> stickmover.axis4 = 0.5
+    >>> # Send the command to the StickMover device
+    >>> stickmover.update()
+
+### Sample Code Execution
 
     $ python pystickmover.py
     
-### Sample Output
+### Sample Code Output
 
     Writing: b'\x02\x03\xe8\x05\xdc\x05\xdc\x07\xd0\x00\x00\x00\x00\x86'
     Reading: b''
@@ -34,7 +55,7 @@ This driver allows a control the StickMover training device developed by AVIrem.
     
     (ctrl-c pressed)
     
-### Sample Output Explanation
+### Sample Code Output Explanation
 
 The above output indicates the raw output of 4 stick position commands and the resulting responses from the StickMover device.
 
