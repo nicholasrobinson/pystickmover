@@ -1,3 +1,27 @@
+Intercepting device traffic for devlopment
+==========================================
+socat -d -d -v -x pty,link=/tmp/serial,wait-slave,raw,echo=0,ispeed=57600,ospeed=57600 /dev/cu.usbserial-DN2VI335,ispeed=57600,ospeed=57600
+
+Streaming serial data over the network
+======================================
+# Client
+https://www.hw-group.com/software/hw-vsp3-virtual-serial-port
+- Invoke with settings:
+  - Port Name: COM3
+  - IP Address: <server_ip>
+  - Port: 1234
+
+# Server
+https://pyserial.readthedocs.io/en/latest/examples.html#single-port-tcp-ip-serial-bridge-rfc-2217
+(see rfc2217_server.py)
+- Invoke with settings:
+  $ python3 rfc2217_server.py -p 1234 -v /dev/cu.usbserial-DN2VI335
+
+Note: StickMover is not detected by OEM software with this method
+
+General debugging
+=================
+
 # Create two virtual serial ports, slave the first to the second, debug hex output
 socat -d -d -v -x pty,link=/tmp/serial,wait-slave,raw,echo=0 pty,link=/tmp/serial2,raw,echo=0
 # Connect to virtual serial ports

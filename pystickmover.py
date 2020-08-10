@@ -1,37 +1,56 @@
 import serial
 
 class StickMover:
-    AXIS_MIN_OUTPUT     = 1000
-    AXIS_MAX_OUTPUT     = 2000
-    AXIS_BYTES          = 2
-    AXIS_MIN_INPUT      = 0.0
-    AXIS_MAX_INPUT      = 1.0
-    AXIS_CENTER_INPUT   = 0.5
-    CHECKSUM_BYTES      = 1
-    RX_BYTES            = 100
-    ENDIANNESS          = 'big'
-    BAUD_RATE           = 57600
-    ACK_TIMEOUT         = 0.01
+    AXIS_MIN_OUTPUT         = 1000
+    AXIS_MAX_OUTPUT         = 2000
+    AXIS_BYTES              = 2
+    AXIS_MIN_INPUT          = 0.0
+    AXIS_MAX_INPUT          = 1.0
+    AXIS_CENTER_INPUT       = 0.5
+    AXIS_EXP_MIN_OUTPUT     = -100
+    AXIS_EXP_MAX_OUTPUT     = 100
+    AXIS_EXP_BYTES          = 1
+    AXIS_EXP_INVERT_INPUT   = -1.0
+    AXIS_EXP_MIN_INPUT      = -1.0
+    AXIS_EXP_MAX_INPUT      = 1.0
+    AXIS_EXP_OFF_INPUT      = 0.0
+    CHECKSUM_BYTES          = 1
+    RX_BYTES                = 100
+    ENDIANNESS              = 'big'
+    BAUD_RATE               = 57600
+    ACK_TIMEOUT             = 0.01
 
     @staticmethod
     def sanitize_axis(axis_input):
-        axis_output = axis_input * (StickMover.AXIS_MAX_OUTPUT - StickMover.AXIS_MIN_OUTPUT) + StickMover.AXIS_MIN_OUTPUT
+        axis_output = (axis_input - StickMover.AXIS_MIN_INPUT) / (StickMover.AXIS_MAX_INPUT - StickMover.AXIS_MIN_INPUT) * (StickMover.AXIS_MAX_OUTPUT - StickMover.AXIS_MIN_OUTPUT) + StickMover.AXIS_MIN_OUTPUT
         if axis_output > StickMover.AXIS_MAX_OUTPUT:
-            return StickMover.AXIS_MAX_OUTPUT
+            axis_output = StickMover.AXIS_MAX_OUTPUT
         elif axis_output < StickMover.AXIS_MIN_OUTPUT:
-            return StickMover.AXIS_MIN_OUTPUT
-        else:
-            return int(axis_output)
+            axis_output = StickMover.AXIS_MIN_OUTPUT
+        return int(axis_output).to_bytes(StickMover.AXIS_BYTES, byteorder=StickMover.ENDIANNESS)
 
     @staticmethod
-    def generate_payload(axis1_input=0.5, axis2_input=0.5, axis3_input=0.5, axis4_input=0.5):
+    def sanitize_exp(exp_input):
+        exp_output = StickMover.AXIS_EXP_INVERT_INPUT * ((exp_input - StickMover.AXIS_EXP_MIN_INPUT) / (StickMover.AXIS_EXP_MAX_INPUT - StickMover.AXIS_EXP_MIN_INPUT) * (StickMover.AXIS_EXP_MAX_OUTPUT - StickMover.AXIS_EXP_MIN_OUTPUT) + StickMover.AXIS_EXP_MIN_OUTPUT)
+        if exp_output > StickMover.AXIS_EXP_MAX_OUTPUT:
+            exp_output = StickMover.AXIS_EXP_MAX_OUTPUT
+        elif exp_output < StickMover.AXIS_EXP_MIN_OUTPUT:
+            exp_output = StickMover.AXIS_EXP_MIN_OUTPUT
+        else:
+            return int(exp_output).to_bytes(StickMover.AXIS_EXP_BYTES, byteorder=StickMover.ENDIANNESS, signed=True)
+
+    @staticmethod
+    def generate_payload(axis1_input=0.5, axis2_input=0.5, axis3_input=0.5, axis4_input=0.5, axis1_exp=0.0, axis2_exp=0.0, axis3_exp=0.0, axis4_exp=0.0):
         mode_bytes      = b'\x02'
-        axis1_bytes     = StickMover.sanitize_axis(axis1_input).to_bytes(StickMover.AXIS_BYTES, byteorder=StickMover.ENDIANNESS)
-        axis2_bytes     = StickMover.sanitize_axis(axis2_input).to_bytes(StickMover.AXIS_BYTES, byteorder=StickMover.ENDIANNESS)
-        axis3_bytes     = StickMover.sanitize_axis(axis3_input).to_bytes(StickMover.AXIS_BYTES, byteorder=StickMover.ENDIANNESS)
-        axis4_bytes     = StickMover.sanitize_axis(axis4_input).to_bytes(StickMover.AXIS_BYTES, byteorder=StickMover.ENDIANNESS)
-        fill_bytes      = b'\x00\x00\x00\x00'
-        partial_payload = mode_bytes + axis1_bytes + axis2_bytes + axis3_bytes + axis4_bytes + fill_bytes
+        axis1_bytes     = StickMover.sanitize_axis(axis1_input)
+        axis2_bytes     = StickMover.sanitize_axis(axis2_input)
+        axis3_bytes     = StickMover.sanitize_axis(axis3_input)
+        axis4_bytes     = StickMover.sanitize_axis(axis4_input)
+        axis1_exp_bytes = StickMover.sanitize_exp(axis1_exp)
+        axis2_exp_bytes = StickMover.sanitize_exp(axis2_exp)
+        axis3_exp_bytes = StickMover.sanitize_exp(axis3_exp)
+        axis4_exp_bytes = StickMover.sanitize_exp(axis4_exp)
+        partial_payload = mode_bytes + axis1_bytes + axis2_bytes + axis3_bytes + axis4_bytes + axis1_exp_bytes + axis2_exp_bytes + axis3_exp_bytes + axis4_exp_bytes
         check_bytes     = (sum(partial_payload) & 0xff).to_bytes(StickMover.CHECKSUM_BYTES, byteorder=StickMover.ENDIANNESS)
         return partial_payload + check_bytes
 
@@ -41,13 +60,20 @@ class StickMover:
         self.axis2 = StickMover.AXIS_CENTER_INPUT
         self.axis3 = StickMover.AXIS_CENTER_INPUT
         self.axis4 = StickMover.AXIS_CENTER_INPUT
+        self.axis1_exp = StickMover.AXIS_EXP_OFF_INPUT
+        self.axis2_exp = StickMover.AXIS_EXP_OFF_INPUT
+        self.axis3_exp = StickMover.AXIS_EXP_OFF_INPUT
+        self.axis4_exp = StickMover.AXIS_EXP_OFF_INPUT
         self.debug = debug
 
     def __del__(self):
-        self.serial_connection.close()
+        try:
+            self.serial_connection.close()
+        except AttributeError:
+            pass
 
     def update(self):
-        payload = StickMover.generate_payload(self.axis1, self.axis2, self.axis3, self.axis4)
+        payload = StickMover.generate_payload(self.axis1, self.axis2, self.axis3, self.axis4, self.axis1_exp, self.axis2_exp, self.axis3_exp, self.axis4_exp)
         if self.debug:
             print('Writing:', payload)
         self.serial_connection.write(payload)
@@ -55,13 +81,17 @@ class StickMover:
         if self.debug:
             print('Reading:', repsonse)
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     try:
-        stickmover = StickMover('/dev/cu.usbserial-DN2VI335', True)
+        stickmover = StickMover(serial_port='/tmp/serial', debug=True)
         stickmover.axis1 = 0.0
         stickmover.axis2 = 0.5
         stickmover.axis3 = 0.5
         stickmover.axis4 = 1.0
+        stickmover.axis1_exp = 1.0
+        stickmover.axis2_exp = -1.0
+        stickmover.axis3_exp = 0.0
+        stickmover.axis4_exp = 0.5
         axis1_step = 0.01
         axis2_step = 0.01
         axis3_step = 0.01
@@ -81,5 +111,9 @@ if __name__ == "__main__":
             stickmover.axis3 += axis3_step
             stickmover.axis4 += axis4_step
     except KeyboardInterrupt:
-        pass
+        print('Program halted.')
+    except FileNotFoundError:
+        print('Invalid serial port.')
+    except serial.serialutil.SerialException:
+        print('Serial port disconnected.')
     
