@@ -13,7 +13,7 @@ This driver allows a control the StickMover training device developed by AVIrem.
 
 ## Installation
 
-    $ git clone git://github.com/nicholasrobinson/pystickmover.git
+    $ pip install pystickmover
     
 ## Usage
 
@@ -40,7 +40,7 @@ This driver allows a control the StickMover training device developed by AVIrem.
 
 ### Sample Code Execution
 
-    $ python pystickmover.py
+    $ python pystickmover.py /dev/ttyUSB0
     
 ### Sample Code Output
 
