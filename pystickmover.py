@@ -1,4 +1,7 @@
+#!/usr/bin/env python3
+
 import serial
+import sys
 
 class StickMover:
     AXIS_MIN_OUTPUT         = 1000
@@ -82,38 +85,44 @@ class StickMover:
             print('Reading:', repsonse)
 
 if __name__ == '__main__':
-    try:
-        stickmover = StickMover(serial_port='/tmp/serial', debug=True)
-        stickmover.axis1 = 0.0
-        stickmover.axis2 = 0.5
-        stickmover.axis3 = 0.5
-        stickmover.axis4 = 1.0
-        stickmover.axis1_exp = 1.0
-        stickmover.axis2_exp = -1.0
-        stickmover.axis3_exp = 0.0
-        stickmover.axis4_exp = 0.5
-        axis1_step = 0.01
-        axis2_step = 0.01
-        axis3_step = 0.01
-        axis4_step = 0.01
-        while True:
-            stickmover.update()
-            if stickmover.axis1 > StickMover.AXIS_MAX_INPUT or stickmover.axis1 < StickMover.AXIS_MIN_INPUT:
-                axis1_step *= -1.0
-            if stickmover.axis2 > StickMover.AXIS_MAX_INPUT or stickmover.axis2 < StickMover.AXIS_MIN_INPUT:
-                axis2_step *= -1.0
-            if stickmover.axis3 > StickMover.AXIS_MAX_INPUT or stickmover.axis3 < StickMover.AXIS_MIN_INPUT:
-                axis3_step *= -1.0
-            if stickmover.axis4 > StickMover.AXIS_MAX_INPUT or stickmover.axis4 < StickMover.AXIS_MIN_INPUT:
-                axis4_step *= -1.0
-            stickmover.axis1 += axis1_step
-            stickmover.axis2 += axis2_step
-            stickmover.axis3 += axis3_step
-            stickmover.axis4 += axis4_step
-    except KeyboardInterrupt:
-        print('Program halted.')
-    except FileNotFoundError:
-        print('Invalid serial port.')
-    except serial.serialutil.SerialException:
-        print('Serial port disconnected.')
+    if len(sys.argv) > 1:
+        try:
+            stickmover = StickMover(serial_port=sys.argv[1], debug=True)
+            stickmover.axis1 = 0.0
+            stickmover.axis2 = 0.5
+            stickmover.axis3 = 0.5
+            stickmover.axis4 = 1.0
+            stickmover.axis1_exp = 1.0
+            stickmover.axis2_exp = -1.0
+            stickmover.axis3_exp = 0.0
+            stickmover.axis4_exp = 0.5
+            axis1_step = 0.01
+            axis2_step = 0.01
+            axis3_step = 0.01
+            axis4_step = 0.01
+            while True:
+                stickmover.update()
+                if stickmover.axis1 > StickMover.AXIS_MAX_INPUT or stickmover.axis1 < StickMover.AXIS_MIN_INPUT:
+                    axis1_step *= -1.0
+                if stickmover.axis2 > StickMover.AXIS_MAX_INPUT or stickmover.axis2 < StickMover.AXIS_MIN_INPUT:
+                    axis2_step *= -1.0
+                if stickmover.axis3 > StickMover.AXIS_MAX_INPUT or stickmover.axis3 < StickMover.AXIS_MIN_INPUT:
+                    axis3_step *= -1.0
+                if stickmover.axis4 > StickMover.AXIS_MAX_INPUT or stickmover.axis4 < StickMover.AXIS_MIN_INPUT:
+                    axis4_step *= -1.0
+                stickmover.axis1 += axis1_step
+                stickmover.axis2 += axis2_step
+                stickmover.axis3 += axis3_step
+                stickmover.axis4 += axis4_step
+        except KeyboardInterrupt:
+            exit(0)
+        except FileNotFoundError:
+            print('Invalid serial port.')
+            exit(1)
+        except serial.serialutil.SerialException:
+            print('Serial port disconnected.')
+            exit(1)
+    else:
+        print('Usage: ./pystickmover <device>')
+        exit(1)
     
